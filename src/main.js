@@ -173,8 +173,8 @@ async function startTextOnlyConversation(initialMessage = null) {
             onConnect: () => {
                 console.log('✅ Connected to VOXA (text mode)');
                 // Send initial message if provided
-                if (initialMessage && conversation.sendUserText) {
-                    conversation.sendUserText(initialMessage);
+                if (initialMessage && conversation.sendUserMessage) {
+                    conversation.sendUserMessage(initialMessage);
                 }
             },
             
@@ -353,10 +353,10 @@ async function sendChatMessage() {
     checkForErrorCodes(text);
     
     // Send to ElevenLabs if connected
-    if (conversation && conversation.sendUserText) {
+    if (conversation && conversation.sendUserMessage) {
         try {
             console.log('📤 Sending text to VOXA:', text);
-            await conversation.sendUserText(text);
+            conversation.sendUserMessage(text);
         } catch (error) {
             console.error('Failed to send text message:', error);
         }
@@ -447,6 +447,12 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendChatMessage();
     });
+    // Notify agent when user is typing to prevent interruptions
+    chatInput.addEventListener('input', () => {
+        if (conversation && conversation.sendUserActivity) {
+            conversation.sendUserActivity();
+        }
+    });
     
     // Error overlay
     errorCloseBtn.addEventListener('click', closeErrorOverlay);
@@ -455,3 +461,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // Expose for testing in console
 window.showErrorCode = showErrorCode;
 window.startVoiceCall = startVoiceCall;
+window.getConversation = () => conversation;
