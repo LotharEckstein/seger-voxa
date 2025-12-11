@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOXA AI - Seger Support</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-voxa">VOXA</span>
+            <span class="logo-ai">AI</span>
+        </div>
+        <nav class="nav-menu">
+            <a class="nav-item">Uptime Insurance</a>
+            <a class="nav-item">Support Calendar</a>
+            <a class="nav-item">Conversation Log</a>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <img src="/SegerVoxaHero.jpg" alt="Seger Support" class="hero-image">
+            
+            <!-- Status Indicator (shown during call) -->
+            <div class="status-indicator" id="statusIndicator">
+                <div class="status-orb" id="statusOrb"></div>
+                <span class="status-text" id="statusText">Bereit</span>
+            </div>
+        </section>
+
+        <!-- Button Bar -->
+        <div class="button-bar" id="buttonBar">
+            <button class="btn btn-teal" id="callVoxaBtn">CALL VOXA</button>
+        </div>
+    </main>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <img src="/SegerVoxaHero.jpg" alt="Voxa" class="chat-avatar">
+            <span class="chat-title">Chat with Voxa</span>
+            <button class="chat-close" id="chatCloseBtn">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+            <button class="chat-send" id="chatSendBtn">Send</button>
+        </div>
+    </div>
+
+    <!-- Error Code Overlay -->
+    <div class="error-overlay" id="errorOverlay">
+        <div class="error-header">
+            <img src="/SegerVoxaHero.jpg" alt="Error" class="error-avatar">
+            <span class="error-title" id="errorTitle">SW Error System</span>
+            <button class="error-close" id="errorCloseBtn">×</button>
+        </div>
+        <div class="error-content">
+            <table class="error-table" id="errorTable"></table>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
