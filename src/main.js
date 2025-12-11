@@ -156,6 +156,52 @@ async function startVoiceCall() {
     }
 }
 
+// ============================================
+// Text-Only Conversation - Using ElevenLabs SDK
+// ============================================
+async function startTextOnlyConversation(initialMessage = null) {
+    try {
+        // Start the conversation with ElevenLabs (no microphone needed for text-only)
+        conversation = await Conversation.startSession({
+            agentId: AGENT_ID,
+            overrides: {
+                conversation: {
+                    textOnly: true
+                }
+            },
+            
+            onConnect: () => {
+                console.log('✅ Connected to VOXA (text mode)');
+                // Send initial message if provided
+                if (initialMessage && conversation.sendUserText) {
+                    conversation.sendUserText(initialMessage);
+                }
+            },
+            
+            onDisconnect: () => {
+                console.log('🔴 Disconnected from VOXA');
+                conversation = null;
+            },
+            
+            onError: (error) => {
+                console.error('❌ Error:', error);
+            },
+            
+            onMessage: (message) => {
+                console.log('💬 Message:', message);
+                handleTranscript(message);
+            }
+        });
+        
+        console.log('💬 Text conversation started');
+        
+    } catch (error) {
+        console.error('Failed to start text conversation:', error);
+        // Fallback: show error to user
+        addMessageToChat('Verbindungsfehler. Bitte versuchen Sie es erneut.', 'voxa');
+    }
+}
+
 // Update status indicator
 function updateStatus(mode, text) {
     statusText.textContent = text;
@@ -205,7 +251,7 @@ async function endCall() {
 // ============================================
 // Text Chat
 // ============================================
-function startTextChat() {
+async function startTextChat() {
     chatPanel.classList.add('active');
     updateButtons('chat');
     
@@ -214,10 +260,17 @@ function startTextChat() {
         addMessageToChat('Hallo, ich bin Seger Voxa, Ihr persönlicher AI Support Agent. Wie kann ich Ihnen helfen?', 'voxa');
     }
     
-    // Show transcript if we have messages
-    transcriptMessages.forEach(msg => {
-        addMessageToChat(msg.text, msg.sender);
-    });
+    // Show transcript if we have messages from voice call
+    if (transcriptMessages.length > 0 && chatMessages.children.length <= 2) {
+        transcriptMessages.forEach(msg => {
+            addMessageToChat(msg.text, msg.sender);
+        });
+    }
+    
+    // Start text-only conversation if not already connected
+    if (!conversation) {
+        await startTextOnlyConversation();
+    }
 }
 
 function endChat() {
@@ -290,12 +343,27 @@ function addMessageToChat(text, sender) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function sendChatMessage() {
+async function sendChatMessage() {
     const text = chatInput.value.trim();
-    if (text) {
-        addMessageToChat(text, 'user');
-        chatInput.value = '';
-        checkForErrorCodes(text);
+    if (!text) return;
+    
+    // Show user message in UI
+    addMessageToChat(text, 'user');
+    chatInput.value = '';
+    checkForErrorCodes(text);
+    
+    // Send to ElevenLabs if connected
+    if (conversation && conversation.sendUserText) {
+        try {
+            console.log('📤 Sending text to VOXA:', text);
+            await conversation.sendUserText(text);
+        } catch (error) {
+            console.error('Failed to send text message:', error);
+        }
+    } else if (!conversation) {
+        // Start a conversation first if not connected
+        console.log('📡 Starting conversation for text chat...');
+        await startTextOnlyConversation(text);
     }
 }
 
