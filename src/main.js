@@ -16,6 +16,7 @@ let currentMode = 'idle'; // idle, selecting, connecting, voice, chat
 let conversation = null;
 let isMuted = false;
 let transcriptMessages = [];
+const recentlyShownCodes = new Set(); // Prevent duplicate popups
 
 // ============================================
 // DOM Elements
@@ -32,6 +33,10 @@ const chatCloseBtn = document.getElementById('chatCloseBtn');
 const errorOverlay = document.getElementById('errorOverlay');
 const errorTable = document.getElementById('errorTable');
 const errorCloseBtn = document.getElementById('errorCloseBtn');
+const errorTitle = document.getElementById('errorTitle');
+const errorContent = document.getElementById('errorContent');
+const mediaLightbox = document.getElementById('mediaLightbox');
+const lightboxImage = document.getElementById('lightboxImage');
 
 // ============================================
 // Button Management
@@ -161,7 +166,6 @@ async function startVoiceCall() {
 // ============================================
 async function startTextOnlyConversation(initialMessage = null) {
     try {
-        // Start the conversation with ElevenLabs (no microphone needed for text-only)
         conversation = await Conversation.startSession({
             agentId: AGENT_ID,
             overrides: {
@@ -172,7 +176,6 @@ async function startTextOnlyConversation(initialMessage = null) {
             
             onConnect: () => {
                 console.log('✅ Connected to VOXA (text mode)');
-                // Send initial message if provided
                 if (initialMessage && conversation.sendUserMessage) {
                     conversation.sendUserMessage(initialMessage);
                 }
@@ -197,7 +200,6 @@ async function startTextOnlyConversation(initialMessage = null) {
         
     } catch (error) {
         console.error('Failed to start text conversation:', error);
-        // Fallback: show error to user
         addMessageToChat('Verbindungsfehler. Bitte versuchen Sie es erneut.', 'voxa');
     }
 }
@@ -215,7 +217,6 @@ function updateStatus(mode, text) {
 
 // Handle transcript messages
 function handleTranscript(message) {
-    // Add to transcript
     if (message.message) {
         const sender = message.source === 'user' ? 'user' : 'voxa';
         transcriptMessages.push({
@@ -229,10 +230,8 @@ function handleTranscript(message) {
             addMessageToChat(message.message, sender);
         }
         
-        // Check for error codes in agent response
-        if (sender === 'voxa') {
-            checkForErrorCodes(message.message);
-        }
+        // Check for error codes in any message
+        checkForErrorCodes(message.message);
     }
 }
 
@@ -255,19 +254,16 @@ async function startTextChat() {
     chatPanel.classList.add('active');
     updateButtons('chat');
     
-    // Add greeting if empty
     if (chatMessages.children.length === 0) {
         addMessageToChat('Hallo, ich bin Seger Voxa, Ihr persönlicher AI Support Agent. Wie kann ich Ihnen helfen?', 'voxa');
     }
     
-    // Show transcript if we have messages from voice call
     if (transcriptMessages.length > 0 && chatMessages.children.length <= 2) {
         transcriptMessages.forEach(msg => {
             addMessageToChat(msg.text, msg.sender);
         });
     }
     
-    // Start text-only conversation if not already connected
     if (!conversation) {
         await startTextOnlyConversation();
     }
@@ -347,12 +343,10 @@ async function sendChatMessage() {
     const text = chatInput.value.trim();
     if (!text) return;
     
-    // Show user message in UI
     addMessageToChat(text, 'user');
     chatInput.value = '';
     checkForErrorCodes(text);
     
-    // Send to ElevenLabs if connected
     if (conversation && conversation.sendUserMessage) {
         try {
             console.log('📤 Sending text to VOXA:', text);
@@ -361,39 +355,55 @@ async function sendChatMessage() {
             console.error('Failed to send text message:', error);
         }
     } else if (!conversation) {
-        // Start a conversation first if not connected
         console.log('📡 Starting conversation for text chat...');
         await startTextOnlyConversation(text);
     }
 }
 
 // ============================================
-// Error Code Detection
+// Error Code Detection (with Media Support)
 // ============================================
 function checkForErrorCodes(text) {
+    // Match patterns from the database:
+    // - "e1001", "E1001", "e 1001" (e-prefixed)
+    // - "106", "1005", "1006" (pure numeric 3-4 digits)
+    // - "error code 1005", "Fehlercode e1001"
     const patterns = [
-        /\b[Ee]\s*0*(\d{1,4})\b/g,
-        /\berror\s*(?:code\s*)?(\d{3,4})\b/gi,
-        /\bFehlercode\s*[Ee]?\s*0*(\d{1,4})\b/gi
+        /\b[Ee]\s*(\d{1,4})\b/g,
+        /(?:[Ff]ehlercode|[Ee]rror\s*(?:code)?)\s*[#]?\s*(\d{3,4})\b/gi,
+        /\b(1\d{2,3})\b/g,
     ];
     
+    let foundCode = null;
+    
     for (const pattern of patterns) {
-        const matches = text.match(pattern);
-        if (matches) {
-            for (const match of matches) {
-                const numMatch = match.match(/\d+/);
-                if (numMatch) {
-                    const code = 'e' + numMatch[0].padStart(3, '0');
-                    showErrorCode(code);
-                    return;
-                }
-            }
+        let match;
+        while ((match = pattern.exec(text)) !== null) {
+            const fullMatch = match[0].trim();
+            const normalized = fullMatch.toLowerCase().replace(/\s+/g, '');
+            
+            if (recentlyShownCodes.has(normalized)) continue;
+            
+            foundCode = normalized;
+            break;
         }
+        if (foundCode) break;
+    }
+    
+    if (foundCode) {
+        recentlyShownCodes.add(foundCode);
+        // Allow re-display after 30 seconds
+        setTimeout(() => recentlyShownCodes.delete(foundCode), 30000);
+        showErrorCode(foundCode);
     }
 }
 
+// ============================================
+// Error Code Lookup + Media Fetch
+// ============================================
 async function showErrorCode(code) {
     try {
+        // 1. Query Supabase for error code
         const response = await fetch(
             `${SUPABASE_URL}/rest/v1/error_codes?tenant_id=eq.${TENANT_ID}&code=ilike.*${code}*&select=*`,
             {
@@ -407,14 +417,65 @@ async function showErrorCode(code) {
         const errors = await response.json();
         
         if (errors && errors.length > 0) {
-            displayErrorOverlay(errors);
+            // 2. Fetch media files for matched error codes
+            const errorCodeIds = errors.map(e => e.id);
+            let mediaFiles = [];
+            
+            for (const ecId of errorCodeIds) {
+                try {
+                    const mediaResp = await fetch(
+                        `${SUPABASE_URL}/rest/v1/media_files?error_code_id=eq.${ecId}&select=*`,
+                        {
+                            headers: {
+                                'apikey': SUPABASE_ANON_KEY,
+                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                            }
+                        }
+                    );
+                    const media = await mediaResp.json();
+                    if (media && media.length > 0) {
+                        mediaFiles = mediaFiles.concat(media);
+                    }
+                } catch (e) {
+                    console.warn('Media fetch error:', e);
+                }
+            }
+            
+            // 3. Build public URLs
+            const mediaWithUrls = mediaFiles.map(m => ({
+                ...m,
+                publicUrl: m.storage_path 
+                    ? `${SUPABASE_URL}/storage/v1/object/public/seger-media/${m.storage_path}`
+                    : null
+            }));
+            
+            console.log(`📷 Found ${mediaWithUrls.length} media files for error code ${code}`);
+            
+            // 4. Display overlay + media
+            displayErrorOverlay(errors, mediaWithUrls);
+            
+            // 5. Show inline images in chat
+            if (mediaWithUrls.length > 0 && chatPanel.classList.contains('active')) {
+                showMediaInChat(mediaWithUrls);
+            }
         }
     } catch (error) {
         console.error('Error fetching error code:', error);
     }
 }
 
-function displayErrorOverlay(errors) {
+// ============================================
+// Error Overlay with Media Gallery
+// ============================================
+function displayErrorOverlay(errors, mediaFiles = []) {
+    // Update title
+    if (errors.length === 1) {
+        errorTitle.textContent = `Error ${errors[0].code} — ${errors[0].name || 'Details'}`;
+    } else {
+        errorTitle.textContent = `${errors.length} Error Codes Found`;
+    }
+    
+    // Build table rows
     let html = '';
     for (const error of errors) {
         html += `
@@ -422,13 +483,96 @@ function displayErrorOverlay(errors) {
                 <td><strong>${error.code}</strong></td>
                 <td>${error.name || ''}</td>
                 <td>${error.description || ''}</td>
-                <td>${error.solution || ''}</td>
+                <td>${error.correction || error.solution || ''}</td>
             </tr>
         `;
     }
-    
     errorTable.innerHTML = html;
+    
+    // Remove old media section if exists
+    const oldMedia = errorContent.querySelector('.error-media-section');
+    if (oldMedia) oldMedia.remove();
+    
+    // Add media gallery if we have images
+    if (mediaFiles.length > 0) {
+        const mediaSection = document.createElement('div');
+        mediaSection.className = 'error-media-section';
+        
+        let galleryHtml = `<div class="error-media-title">📷 Reference Images (${mediaFiles.length})</div>`;
+        galleryHtml += '<div class="media-gallery">';
+        
+        for (const media of mediaFiles) {
+            if (!media.publicUrl) continue;
+            const label = media.title || media.filename || 'Image';
+            const safeUrl = media.publicUrl.replace(/'/g, "\\'");
+            galleryHtml += `
+                <div class="media-card" data-url="${media.publicUrl}">
+                    <img src="${media.publicUrl}" alt="${label}" loading="lazy"
+                         onerror="this.parentElement.style.display='none'">
+                    <div class="media-card-label">${label}</div>
+                </div>
+            `;
+        }
+        
+        galleryHtml += '</div>';
+        mediaSection.innerHTML = galleryHtml;
+        
+        // Add click handlers for lightbox
+        mediaSection.querySelectorAll('.media-card').forEach(card => {
+            card.addEventListener('click', () => {
+                openLightbox(card.dataset.url);
+            });
+        });
+        
+        errorContent.appendChild(mediaSection);
+    }
+    
     errorOverlay.classList.add('active');
+}
+
+// ============================================
+// Chat Inline Media
+// ============================================
+function showMediaInChat(mediaFiles) {
+    for (const media of mediaFiles) {
+        if (!media.publicUrl) continue;
+        const label = media.title || media.description || 'Reference image';
+        
+        const mediaMsg = document.createElement('div');
+        mediaMsg.className = 'message';
+        mediaMsg.innerHTML = `
+            <div class="message-avatar" style="background: var(--voxa-teal, #4A9B9B);">V</div>
+            <div>
+                <div class="chat-media-card" data-url="${media.publicUrl}">
+                    <img src="${media.publicUrl}" alt="${label}" loading="lazy"
+                         onerror="this.parentElement.style.display='none'">
+                    <div class="chat-media-label">📷 ${label}</div>
+                </div>
+            </div>
+        `;
+        
+        // Add lightbox click handler
+        mediaMsg.querySelector('.chat-media-card').addEventListener('click', () => {
+            openLightbox(media.publicUrl);
+        });
+        
+        chatMessages.appendChild(mediaMsg);
+    }
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ============================================
+// Lightbox
+// ============================================
+function openLightbox(url) {
+    lightboxImage.src = url;
+    mediaLightbox.classList.add('active');
+}
+
+function closeLightbox() {
+    mediaLightbox.classList.remove('active');
+    lightboxImage.src = '';
 }
 
 function closeErrorOverlay() {
@@ -447,7 +591,6 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendChatMessage();
     });
-    // Notify agent when user is typing to prevent interruptions
     chatInput.addEventListener('input', () => {
         if (conversation && conversation.sendUserActivity) {
             conversation.sendUserActivity();
@@ -456,6 +599,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Error overlay
     errorCloseBtn.addEventListener('click', closeErrorOverlay);
+    
+    // Lightbox
+    mediaLightbox.addEventListener('click', closeLightbox);
 });
 
 // Expose for testing in console

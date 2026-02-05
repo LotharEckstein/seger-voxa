@@ -8,6 +8,106 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/src/style.css">
+    <style>
+        /* Media Gallery in Error Overlay */
+        .error-media-section {
+            padding: 1rem;
+            border-top: 2px solid var(--voxa-teal, #4A9B9B);
+        }
+
+        .error-media-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--voxa-teal, #4A9B9B);
+            margin-bottom: 0.75rem;
+        }
+
+        .media-gallery {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .media-card {
+            flex-shrink: 0;
+            width: 180px;
+            background: #F9F9F9;
+            border: 1px solid #E0E0E0;
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+        }
+
+        .media-card:hover {
+            box-shadow: 0 2px 12px rgba(74, 155, 155, 0.3);
+        }
+
+        .media-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .media-card-label {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Chat inline media */
+        .chat-media-card {
+            margin-top: 0.5rem;
+            max-width: 250px;
+            background: #F0F0F0;
+            border: 1px solid #E0E0E0;
+            cursor: pointer;
+        }
+
+        .chat-media-card img {
+            width: 100%;
+            height: auto;
+            max-height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .chat-media-label {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.7rem;
+            color: #666;
+        }
+
+        /* Lightbox for full-size image */
+        .media-lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .media-lightbox.active {
+            display: flex;
+        }
+
+        .media-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -22,7 +122,6 @@
             <a class="nav-item">Conversation Log</a>
         </nav>
     </header>
-
     <!-- Main Container -->
     <main class="main-container">
         <!-- Hero Section -->
@@ -35,13 +134,11 @@
                 <span class="status-text" id="statusText">Bereit</span>
             </div>
         </section>
-
         <!-- Button Bar -->
         <div class="button-bar" id="buttonBar">
             <button class="btn btn-teal" id="callVoxaBtn">CALL VOXA</button>
         </div>
     </main>
-
     <!-- Chat Panel -->
     <div class="chat-panel" id="chatPanel">
         <div class="chat-header">
@@ -55,7 +152,6 @@
             <button class="chat-send" id="chatSendBtn">Send</button>
         </div>
     </div>
-
     <!-- Error Code Overlay -->
     <div class="error-overlay" id="errorOverlay">
         <div class="error-header">
@@ -63,11 +159,14 @@
             <span class="error-title" id="errorTitle">SW Error System</span>
             <button class="error-close" id="errorCloseBtn">×</button>
         </div>
-        <div class="error-content">
+        <div class="error-content" id="errorContent">
             <table class="error-table" id="errorTable"></table>
         </div>
     </div>
-
+    <!-- Media Lightbox -->
+    <div class="media-lightbox" id="mediaLightbox">
+        <img id="lightboxImage" src="" alt="Full size">
+    </div>
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
