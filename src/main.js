@@ -366,25 +366,27 @@ async function sendChatMessage() {
 function checkForErrorCodes(text) {
     // Match patterns from the database:
     // - "e1001", "E1001", "e 1001" (e-prefixed)
-    // - "106", "1005", "1006" (pure numeric 3-4 digits)
     // - "error code 1005", "Fehlercode e1001"
+    // - "106", "1005", "1006" (pure numeric 3-4 digits)
+    // Each pattern uses capture group 1 for the numeric part
     const patterns = [
-        /\b[Ee]\s*(\d{1,4})\b/g,
-        /(?:[Ff]ehlercode|[Ee]rror\s*(?:code)?)\s*[#]?\s*(\d{3,4})\b/gi,
-        /\b(1\d{2,3})\b/g,
+        { regex: /\b[Ee]\s*(\d{1,4})\b/g, prefix: 'e' },           // e1001 → "e" + "1001"
+        { regex: /(?:[Ff]ehlercode|[Ee]rror\s*(?:code)?)\s*[#]?\s*[Ee]?\s*(\d{3,4})\b/gi, prefix: '' },  // "Fehlercode 1005" → "1005"
+        { regex: /\b(1\d{2,3})\b/g, prefix: '' },                    // 106, 1005 → as-is
     ];
     
     let foundCode = null;
     
-    for (const pattern of patterns) {
+    for (const { regex, prefix } of patterns) {
         let match;
-        while ((match = pattern.exec(text)) !== null) {
-            const fullMatch = match[0].trim();
-            const normalized = fullMatch.toLowerCase().replace(/\s+/g, '');
+        while ((match = regex.exec(text)) !== null) {
+            // Use capture group (the numeric part), not the full match
+            const numericPart = match[1];
+            const code = prefix ? prefix + numericPart : numericPart;
             
-            if (recentlyShownCodes.has(normalized)) continue;
+            if (recentlyShownCodes.has(code)) continue;
             
-            foundCode = normalized;
+            foundCode = code;
             break;
         }
         if (foundCode) break;
@@ -392,8 +394,8 @@ function checkForErrorCodes(text) {
     
     if (foundCode) {
         recentlyShownCodes.add(foundCode);
-        // Allow re-display after 30 seconds
         setTimeout(() => recentlyShownCodes.delete(foundCode), 30000);
+        console.log(`🔍 Detected error code: ${foundCode}`);
         showErrorCode(foundCode);
     }
 }
