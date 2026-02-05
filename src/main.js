@@ -552,17 +552,17 @@ function showMediaInChat(mediaFiles) {
         <div class="message-avatar" style="background: var(--voxa-teal, #4A9B9B);">V</div>
         <div class="chat-media-link" style="
             display: flex; align-items: center; gap: 10px;
-            background: rgba(74,155,155,0.1); border: 1px solid rgba(74,155,155,0.3);
+            background: rgba(255,255,255,0.95); border: 1px solid rgba(74,155,155,0.4);
             border-radius: 8px; padding: 8px 12px; cursor: pointer;
             max-width: 320px; transition: background 0.2s;
-        " onmouseover="this.style.background='rgba(74,155,155,0.2)'"
-           onmouseout="this.style.background='rgba(74,155,155,0.1)'">
+        " onmouseover="this.style.background='rgba(255,255,255,1)'"
+           onmouseout="this.style.background='rgba(255,255,255,0.95)'">
             <img src="${firstImg.publicUrl}" alt="${label}" 
                  style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0;"
                  onerror="this.style.display='none'">
-            <div style="font-size: 13px; color: #e0e0e0;">
+            <div style="font-size: 13px; color: #1a1a1a;">
                 <div style="font-weight: 600;">📷 ${label}</div>
-                <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">Click to view in detail panel</div>
+                <div style="font-size: 11px; color: #4A9B9B; margin-top: 2px;">Click to view in detail panel</div>
             </div>
         </div>
     `;
