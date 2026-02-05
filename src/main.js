@@ -533,34 +533,45 @@ function displayErrorOverlay(errors, mediaFiles = []) {
 }
 
 // ============================================
-// Chat Inline Media
+// Chat Inline Media - Compact link version
 // ============================================
 function showMediaInChat(mediaFiles) {
-    for (const media of mediaFiles) {
-        if (!media.publicUrl) continue;
-        const label = media.title || media.description || 'Reference image';
-        
-        const mediaMsg = document.createElement('div');
-        mediaMsg.className = 'message';
-        mediaMsg.innerHTML = `
-            <div class="message-avatar" style="background: var(--voxa-teal, #4A9B9B);">V</div>
-            <div>
-                <div class="chat-media-card" data-url="${media.publicUrl}">
-                    <img src="${media.publicUrl}" alt="${label}" loading="lazy"
-                         onerror="this.parentElement.style.display='none'">
-                    <div class="chat-media-label">📷 ${label}</div>
-                </div>
-            </div>
-        `;
-        
-        // Add lightbox click handler
-        mediaMsg.querySelector('.chat-media-card').addEventListener('click', () => {
-            openLightbox(media.publicUrl);
-        });
-        
-        chatMessages.appendChild(mediaMsg);
-    }
+    if (mediaFiles.length === 0) return;
     
+    const mediaMsg = document.createElement('div');
+    mediaMsg.className = 'message';
+    
+    // Build thumbnail preview (first image only)
+    const firstImg = mediaFiles[0];
+    const label = mediaFiles.length === 1
+        ? (firstImg.title || firstImg.description || 'Reference image')
+        : `${mediaFiles.length} reference images available`;
+    
+    mediaMsg.innerHTML = `
+        <div class="message-avatar" style="background: var(--voxa-teal, #4A9B9B);">V</div>
+        <div class="chat-media-link" style="
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(74,155,155,0.1); border: 1px solid rgba(74,155,155,0.3);
+            border-radius: 8px; padding: 8px 12px; cursor: pointer;
+            max-width: 320px; transition: background 0.2s;
+        " onmouseover="this.style.background='rgba(74,155,155,0.2)'"
+           onmouseout="this.style.background='rgba(74,155,155,0.1)'">
+            <img src="${firstImg.publicUrl}" alt="${label}" 
+                 style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0;"
+                 onerror="this.style.display='none'">
+            <div style="font-size: 13px; color: #e0e0e0;">
+                <div style="font-weight: 600;">📷 ${label}</div>
+                <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">Click to view in detail panel</div>
+            </div>
+        </div>
+    `;
+    
+    // Click opens the error overlay (which has the full gallery)
+    mediaMsg.querySelector('.chat-media-link').addEventListener('click', () => {
+        errorOverlay.classList.add('active');
+    });
+    
+    chatMessages.appendChild(mediaMsg);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
