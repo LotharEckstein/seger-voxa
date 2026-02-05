@@ -248,6 +248,11 @@ function handleTranscript(message) {
             time: new Date()
         });
         
+        // Auto-close error overlay when user asks something new
+        if (sender === 'user' && errorOverlay.classList.contains('active')) {
+            errorOverlay.classList.remove('active');
+        }
+        
         // If chat panel is open, add message there too
         if (chatPanel.classList.contains('active')) {
             addMessageToChat(message.message, sender);
@@ -473,18 +478,17 @@ async function showErrorCode(code) {
 function displayErrorOverlay(errors, mediaFiles = []) {
     // Update title
     if (errors.length === 1) {
-        errorTitle.textContent = `Error ${errors[0].code} — ${errors[0].name || 'Details'}`;
+        errorTitle.textContent = `Error ${errors[0].code} — Details`;
     } else {
         errorTitle.textContent = `${errors.length} Error Codes Found`;
     }
     
-    // Build table rows
+    // Build compact error info (small text, not a table)
     let html = '';
     for (const error of errors) {
         html += `
             <tr>
                 <td><strong>${error.code}</strong></td>
-                <td>${error.name || ''}</td>
                 <td>${error.description || ''}</td>
                 <td>${error.correction || error.solution || ''}</td>
             </tr>
@@ -496,28 +500,28 @@ function displayErrorOverlay(errors, mediaFiles = []) {
     const oldMedia = errorContent.querySelector('.error-media-section');
     if (oldMedia) oldMedia.remove();
     
-    // Add media gallery if we have images
+    // Add media gallery — IMAGE DOMINANT layout
     if (mediaFiles.length > 0) {
         const mediaSection = document.createElement('div');
         mediaSection.className = 'error-media-section';
         
-        let galleryHtml = `<div class="error-media-title">📷 Reference Images (${mediaFiles.length})</div>`;
-        galleryHtml += '<div class="media-gallery">';
+        let galleryHtml = '';
         
         for (const media of mediaFiles) {
             if (!media.publicUrl) continue;
             const label = media.title || media.filename || 'Image';
-            const safeUrl = media.publicUrl.replace(/'/g, "\\'");
             galleryHtml += `
-                <div class="media-card" data-url="${media.publicUrl}">
+                <div class="media-card" data-url="${media.publicUrl}" style="
+                    cursor: pointer; text-align: center; margin-bottom: 8px;
+                ">
                     <img src="${media.publicUrl}" alt="${label}" loading="lazy"
+                         style="max-width: 100%; max-height: 45vh; object-fit: contain; border-radius: 6px; border: 1px solid rgba(74,155,155,0.2);"
                          onerror="this.parentElement.style.display='none'">
-                    <div class="media-card-label">${label}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">${label}</div>
                 </div>
             `;
         }
         
-        galleryHtml += '</div>';
         mediaSection.innerHTML = galleryHtml;
         
         // Add click handlers for lightbox
@@ -527,7 +531,8 @@ function displayErrorOverlay(errors, mediaFiles = []) {
             });
         });
         
-        errorContent.appendChild(mediaSection);
+        // Insert BEFORE the table so images come first
+        errorContent.insertBefore(mediaSection, errorContent.querySelector('.error-table-wrap') || errorContent.firstChild);
     }
     
     errorOverlay.classList.add('active');
