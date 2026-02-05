@@ -447,7 +447,7 @@ async function showErrorCode(code) {
             const mediaWithUrls = mediaFiles.map(m => ({
                 ...m,
                 publicUrl: m.storage_path 
-                    ? `${SUPABASE_URL}/storage/v1/object/public/seger-media/${m.storage_path}`
+                    ? `${SUPABASE_URL}/storage/v1/object/public/${m.storage_path}`
                     : null
             }));
             
