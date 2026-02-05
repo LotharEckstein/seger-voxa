@@ -17,6 +17,29 @@ let conversation = null;
 let isMuted = false;
 let transcriptMessages = [];
 const recentlyShownCodes = new Set(); // Prevent duplicate popups
+let knownErrorCodes = []; // Pre-loaded from Supabase for smart detection
+
+// Load all error codes on startup for matching
+(async function loadErrorCodeIndex() {
+    try {
+        const resp = await fetch(
+            `${SUPABASE_URL}/rest/v1/error_codes?tenant_id=eq.${TENANT_ID}&select=code`,
+            {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                }
+            }
+        );
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+            knownErrorCodes = data.map(d => d.code);
+            console.log(`📋 Loaded ${knownErrorCodes.length} error codes for detection`);
+        }
+    } catch (e) {
+        console.warn('Could not pre-load error codes:', e);
+    }
+})();
 
 // ============================================
 // DOM Elements
@@ -364,39 +387,17 @@ async function sendChatMessage() {
 // Error Code Detection (with Media Support)
 // ============================================
 function checkForErrorCodes(text) {
-    // Match patterns from the database:
-    // - "e1001", "E1001", "e 1001" (e-prefixed)
-    // - "error code 1005", "Fehlercode e1001"
-    // - "106", "1005", "1006" (pure numeric 3-4 digits)
-    // Each pattern uses capture group 1 for the numeric part
-    const patterns = [
-        { regex: /\b[Ee]\s*(\d{1,4})\b/g, prefix: 'e' },           // e1001 → "e" + "1001"
-        { regex: /(?:[Ff]ehlercode|[Ee]rror\s*(?:code)?)\s*[#]?\s*[Ee]?\s*(\d{3,4})\b/gi, prefix: '' },  // "Fehlercode 1005" → "1005"
-        { regex: /\b(1\d{2,3})\b/g, prefix: '' },                    // 106, 1005 → as-is
-    ];
+    const textLower = text.toLowerCase();
     
-    let foundCode = null;
-    
-    for (const { regex, prefix } of patterns) {
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-            // Use capture group (the numeric part), not the full match
-            const numericPart = match[1];
-            const code = prefix ? prefix + numericPart : numericPart;
-            
-            if (recentlyShownCodes.has(code)) continue;
-            
-            foundCode = code;
-            break;
+    for (const code of knownErrorCodes) {
+        if (recentlyShownCodes.has(code)) continue;
+        if (textLower.includes(code.toLowerCase())) {
+            recentlyShownCodes.add(code);
+            setTimeout(() => recentlyShownCodes.delete(code), 30000);
+            console.log(`🔍 Detected error code: ${code}`);
+            showErrorCode(code);
+            return;
         }
-        if (foundCode) break;
-    }
-    
-    if (foundCode) {
-        recentlyShownCodes.add(foundCode);
-        setTimeout(() => recentlyShownCodes.delete(foundCode), 30000);
-        console.log(`🔍 Detected error code: ${foundCode}`);
-        showErrorCode(foundCode);
     }
 }
 
