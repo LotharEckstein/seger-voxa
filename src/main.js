@@ -92,7 +92,7 @@ function updateButtons(state) {
                 <button class="btn btn-dark" id="textChatBtn">TEXT CHAT</button>
             `;
             statusIndicator.classList.add('active');
-            statusText.textContent = 'Verbinde...';
+            statusText.textContent = 'Connecting...';
             statusOrb.className = 'status-orb';
             document.getElementById('textChatBtn').addEventListener('click', startTextChat);
             break;
@@ -146,7 +146,7 @@ async function startVoiceCall() {
             onConnect: () => {
                 console.log('✅ Connected to VOXA');
                 updateButtons('voice');
-                updateStatus('listening', 'Hört zu...');
+                updateStatus('listening', 'Listening...');
             },
             
             onDisconnect: () => {
@@ -163,9 +163,9 @@ async function startVoiceCall() {
             onModeChange: (mode) => {
                 console.log('🔄 Mode:', mode.mode);
                 if (mode.mode === 'speaking') {
-                    updateStatus('speaking', 'VOXA spricht...');
+                    updateStatus('speaking', 'VOXA speaking...');
                 } else {
-                    updateStatus('listening', 'Hört zu...');
+                    updateStatus('listening', 'Listening...');
                 }
             },
             
@@ -180,7 +180,7 @@ async function startVoiceCall() {
     } catch (error) {
         console.error('Failed to start conversation:', error);
         updateButtons('idle');
-        alert('Konnte keine Verbindung herstellen. Bitte Mikrofon-Berechtigung prüfen.');
+        alert('Could not connect. Please check microphone permissions.');
     }
 }
 
@@ -223,7 +223,7 @@ async function startTextOnlyConversation(initialMessage = null) {
         
     } catch (error) {
         console.error('Failed to start text conversation:', error);
-        addMessageToChat('Verbindungsfehler. Bitte versuchen Sie es erneut.', 'voxa');
+        addMessageToChat('Connection error. Please try again.', 'voxa');
     }
 }
 
