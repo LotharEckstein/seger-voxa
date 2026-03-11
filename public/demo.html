@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VOXA AI — Demo Controller</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --voxa-teal: #4A9B9B;
+            --voxa-teal-dark: #3D8585;
+            --dark-gray: #3D3D3D;
+            --coral: #D47764;
+            --beige: #E8DDD0;
+            --text-dark: #333333;
+            --text-light: #FFFFFF;
+            --green: #4CAF50;
+            --yellow: #FFC107;
+            --red: #F44336;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #FFFFFF;
+            color: var(--text-dark);
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: #FFFFFF;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        .logo { display: flex; align-items: baseline; gap: 0.25rem; }
+        .logo-voxa { font-size: 1.8rem; font-weight: 700; color: var(--voxa-teal); letter-spacing: -0.02em; }
+        .logo-ai { font-size: 1.8rem; font-weight: 700; color: var(--text-dark); letter-spacing: -0.02em; }
+        .header-label {
+            font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--coral);
+        }
+
+        /* Main */
+        .main { padding: 1.25rem 1.5rem; max-width: 600px; margin: 0 auto; }
+
+        /* Machine selector */
+        .machine-select-wrap { margin-bottom: 1.5rem; }
+        .machine-select-label {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #999; margin-bottom: 0.4rem;
+        }
+        .machine-select {
+            width: 100%; padding: 0.75rem 1rem;
+            font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600;
+            border: 2px solid #E0E0E0; border-radius: 0; background: #FAFAFA;
+            color: var(--text-dark); cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 1rem center;
+        }
+        .machine-select:focus { outline: none; border-color: var(--voxa-teal); }
+
+        /* Sensor slider rows */
+        .sensor-row {
+            margin-bottom: 1.5rem; padding: 1rem;
+            background: #FAFAFA; border: 1px solid #E8E8E8; border-radius: 6px;
+        }
+        .sensor-header {
+            display: flex; justify-content: space-between; align-items: baseline;
+            margin-bottom: 0.6rem;
+        }
+        .sensor-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #666; }
+        .sensor-value-display { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .sensor-value-display.normal  { color: var(--green); }
+        .sensor-value-display.warning { color: var(--yellow); }
+        .sensor-value-display.critical { color: var(--red); }
+
+        /* Slider track */
+        .slider-wrap { position: relative; margin-top: 0.25rem; }
+
+        .sensor-slider {
+            -webkit-appearance: none; appearance: none;
+            width: 100%; height: 8px; border-radius: 4px;
+            outline: none; cursor: pointer;
+        }
+        .sensor-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #fff; border: 3px solid var(--voxa-teal);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .sensor-slider::-moz-range-thumb {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #fff; border: 3px solid var(--voxa-teal);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        /* Threshold markers */
+        .slider-markers {
+            display: flex; justify-content: space-between;
+            margin-top: 0.3rem; font-size: 0.65rem; color: #aaa;
+        }
+        .marker-warning { color: var(--yellow); font-weight: 600; }
+        .marker-critical { color: var(--red); font-weight: 600; }
+
+        /* Reset button */
+        .reset-btn {
+            width: 100%; padding: 1rem;
+            font-family: 'Space Grotesk', sans-serif; font-size: 1rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            background: var(--coral); color: var(--text-light);
+            border: none; border-radius: 0; cursor: pointer;
+            margin-top: 0.5rem; transition: opacity 0.2s;
+        }
+        .reset-btn:hover { opacity: 0.9; }
+        .reset-btn:active { opacity: 0.8; }
+
+        /* Status banner */
+        .status-banner {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            padding: 0.75rem 1.5rem; text-align: center;
+            font-weight: 700; font-size: 0.85rem; letter-spacing: 0.03em;
+            z-index: 100; transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        .status-banner.visible { transform: translateY(0); }
+        .status-banner.critical { background: var(--red); color: #fff; }
+        .status-banner.clear { background: var(--green); color: #fff; }
+
+        /* Responsive */
+        @media (max-width: 400px) {
+            .main { padding: 1rem; }
+            .sensor-value-display { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <span class="logo-voxa">VOXA</span>
+            <span class="logo-ai">AI</span>
+        </div>
+        <span class="header-label">Demo Controller</span>
+    </header>
+
+    <main class="main">
+        <div class="machine-select-wrap">
+            <div class="machine-select-label">Machine</div>
+            <select class="machine-select" id="machineSelect">
+                <option value="machine_01">Machine 01</option>
+                <option value="conveyor_3">Conveyor 3</option>
+            </select>
+        </div>
+
+        <div class="sensor-row" id="row-temperature">
+            <div class="sensor-header">
+                <span class="sensor-label">Temperature</span>
+                <span class="sensor-value-display normal" id="val-temperature">40 °C</span>
+            </div>
+            <div class="slider-wrap">
+                <input type="range" class="sensor-slider" id="slider-temperature"
+                       min="20" max="120" step="1" value="40">
+            </div>
+            <div class="slider-markers">
+                <span>20°C</span>
+                <span class="marker-warning">70°C</span>
+                <span class="marker-critical">85°C</span>
+                <span>120°C</span>
+            </div>
+        </div>
+
+        <div class="sensor-row" id="row-humidity">
+            <div class="sensor-header">
+                <span class="sensor-label">Humidity</span>
+                <span class="sensor-value-display normal" id="val-humidity">45 %</span>
+            </div>
+            <div class="slider-wrap">
+                <input type="range" class="sensor-slider" id="slider-humidity"
+                       min="20" max="100" step="1" value="45">
+            </div>
+            <div class="slider-markers">
+                <span>20%</span>
+                <span class="marker-warning">75%</span>
+                <span class="marker-critical">90%</span>
+                <span>100%</span>
+            </div>
+        </div>
+
+        <div class="sensor-row" id="row-vibration">
+            <div class="sensor-header">
+                <span class="sensor-label">Vibration</span>
+                <span class="sensor-value-display normal" id="val-vibration">1.5 mm/s</span>
+            </div>
+            <div class="slider-wrap">
+                <input type="range" class="sensor-slider" id="slider-vibration"
+                       min="0" max="15" step="0.1" value="1.5">
+            </div>
+            <div class="slider-markers">
+                <span>0</span>
+                <span class="marker-warning">4 mm/s</span>
+                <span class="marker-critical">7.5 mm/s</span>
+                <span>15</span>
+            </div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">Reset All Sensors</button>
+    </main>
+
+    <div class="status-banner" id="statusBanner"></div>
+
+    <script>
+        const API_URL = 'https://seger-voice-agent.onrender.com';
+
+        const SENSORS = {
+            temperature: { unit: '°C', warning: 70, critical: 85, safe: 40 },
+            humidity:    { unit: '%',  warning: 75, critical: 90, safe: 45 },
+            vibration:   { unit: 'mm/s', warning: 4, critical: 7.5, safe: 1.5 },
+        };
+
+        const machineSelect = document.getElementById('machineSelect');
+        const statusBanner = document.getElementById('statusBanner');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Track state per sensor
+        const sensorState = {};
+        const debounceTimers = {};
+
+        // Initialize
+        Object.keys(SENSORS).forEach(key => {
+            sensorState[key] = 'normal'; // normal, warning, critical
+            const slider = document.getElementById(`slider-${key}`);
+            const display = document.getElementById(`val-${key}`);
+
+            // Set gradient background
+            updateSliderTrack(slider, key);
+
+            slider.addEventListener('input', () => {
+                const val = parseFloat(slider.value);
+                const cfg = SENSORS[key];
+                display.textContent = `${key === 'vibration' ? val.toFixed(1) : Math.round(val)} ${cfg.unit}`;
+
+                // Determine zone
+                let zone = 'normal';
+                if (val >= cfg.critical) zone = 'critical';
+                else if (val >= cfg.warning) zone = 'warning';
+
+                display.className = `sensor-value-display ${zone}`;
+
+                const prevZone = sensorState[key];
+                sensorState[key] = zone;
+
+                // Debounced POST when entering critical OR returning to normal
+                if (zone === 'critical' && prevZone !== 'critical') {
+                    debouncedIngest(key, val, cfg.unit);
+                } else if (zone === 'normal' && prevZone !== 'normal') {
+                    debouncedIngest(key, val, cfg.unit);
+                }
+            });
+        });
+
+        function updateSliderTrack(slider, key) {
+            const cfg = SENSORS[key];
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const range = max - min;
+            const warnPct = ((cfg.warning - min) / range * 100).toFixed(1);
+            const critPct = ((cfg.critical - min) / range * 100).toFixed(1);
+
+            slider.style.background = `linear-gradient(to right,
+                #4CAF50 0%, #4CAF50 ${warnPct}%,
+                #FFC107 ${warnPct}%, #FFC107 ${critPct}%,
+                #F44336 ${critPct}%, #F44336 100%)`;
+        }
+
+        function debouncedIngest(sensorType, value, unit) {
+            clearTimeout(debounceTimers[sensorType]);
+            debounceTimers[sensorType] = setTimeout(() => {
+                postReading(sensorType, value, unit);
+            }, 800);
+        }
+
+        async function postReading(sensorType, value, unit) {
+            const machineId = machineSelect.value;
+            const zone = sensorState[sensorType];
+
+            try {
+                const resp = await fetch(`${API_URL}/api/v1/sensors/ingest`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Tenant-ID': 'seger',
+                    },
+                    body: JSON.stringify({
+                        machine_id: machineId,
+                        sensor_type: sensorType,
+                        value: value,
+                        unit: unit,
+                        source: 'demo_controller',
+                    }),
+                });
+
+                const data = await resp.json();
+                console.log(`[DEMO] ${sensorType} = ${value}${unit}:`, data);
+
+                if (zone === 'critical') {
+                    showBanner('critical', `ESCALATION TRIGGERED — SMS + Call fired`);
+                } else if (zone === 'normal') {
+                    showBanner('clear', `${sensorType} back to normal`);
+                }
+
+            } catch (e) {
+                console.error('[DEMO] POST error:', e);
+                showBanner('critical', 'Connection error — check Render status');
+            }
+        }
+
+        function showBanner(type, text) {
+            statusBanner.className = `status-banner ${type}`;
+            statusBanner.textContent = type === 'critical' ? `🔴 ${text}` : `🟢 ${text}`;
+            statusBanner.classList.add('visible');
+            setTimeout(() => statusBanner.classList.remove('visible'), 5000);
+        }
+
+        // Reset all sliders to safe values
+        resetBtn.addEventListener('click', () => {
+            Object.keys(SENSORS).forEach(key => {
+                const cfg = SENSORS[key];
+                const slider = document.getElementById(`slider-${key}`);
+                const display = document.getElementById(`val-${key}`);
+                slider.value = cfg.safe;
+                display.textContent = `${key === 'vibration' ? cfg.safe.toFixed(1) : Math.round(cfg.safe)} ${cfg.unit}`;
+                display.className = 'sensor-value-display normal';
+                sensorState[key] = 'normal';
+            });
+
+            // Post all-clear for selected machine
+            const machineId = machineSelect.value;
+            Object.keys(SENSORS).forEach(key => {
+                const cfg = SENSORS[key];
+                fetch(`${API_URL}/api/v1/sensors/ingest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Tenant-ID': 'seger' },
+                    body: JSON.stringify({
+                        machine_id: machineId,
+                        sensor_type: key,
+                        value: cfg.safe,
+                        unit: cfg.unit,
+                        source: 'demo_controller',
+                    }),
+                }).catch(e => console.warn('[DEMO] Reset POST error:', e));
+            });
+
+            showBanner('clear', 'All sensors reset to safe values');
+        });
+    </script>
+</body>
+</html>
