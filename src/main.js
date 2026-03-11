@@ -623,7 +623,250 @@ document.addEventListener('DOMContentLoaded', () => {
     mediaLightbox.addEventListener('click', closeLightbox);
 });
 
+// ============================================
+// Sensor Panel — Trade Fair Demo
+// Activated via ?demo=true or pressing D
+// ============================================
+
+const API_URL = 'https://seger-voice-agent.onrender.com';
+const sensorPanel = document.getElementById('sensorPanel');
+const sensorMachines = document.getElementById('sensorMachines');
+const sensorAlertBanner = document.getElementById('sensorAlertBanner');
+const sensorAlertText = document.getElementById('sensorAlertText');
+const sensorAlertDismiss = document.getElementById('sensorAlertDismiss');
+const sensorPanelClose = document.getElementById('sensorPanelClose');
+
+let sensorDemoActive = false;
+let sensorPollTimer = null;
+let realtimeChannel = null;
+let lastBannerAlertId = null;
+
+function isDemoMode() {
+    return new URLSearchParams(window.location.search).has('demo');
+}
+
+function toggleSensorPanel() {
+    sensorDemoActive = !sensorDemoActive;
+    if (sensorDemoActive) {
+        sensorPanel.classList.add('active');
+        refreshDashboard();
+        startSensorPolling();
+        setupRealtimeAlerts();
+    } else {
+        sensorPanel.classList.remove('active');
+        stopSensorPolling();
+        teardownRealtimeAlerts();
+    }
+}
+
+// Dashboard data fetch
+async function refreshDashboard() {
+    try {
+        const resp = await fetch(`${API_URL}/api/v1/sensors/dashboard`, {
+            headers: { 'X-Tenant-ID': 'seger' }
+        });
+        const data = await resp.json();
+        if (data.success) renderMachines(data.machines, data.active_alerts);
+    } catch (e) {
+        console.warn('[SENSOR] Dashboard fetch error:', e);
+    }
+}
+
+function renderMachines(machines, alerts) {
+    if (!machines || machines.length === 0) {
+        sensorMachines.innerHTML = '<div style="padding:1rem;color:#666;text-align:center;">No sensor data yet.<br>Click a scenario button below.</div>';
+        return;
+    }
+
+    sensorMachines.innerHTML = machines.map(m => {
+        const metrics = Object.entries(m.metrics || {}).map(([key, v]) => {
+            let cls = '';
+            if (v.value !== null && v.value !== undefined) {
+                if (v.critical_max && v.value >= v.critical_max) cls = 'critical';
+                else if (v.critical_min && v.value <= v.critical_min) cls = 'critical';
+                else if (v.warning_max && v.value >= v.warning_max) cls = 'warning';
+                else if (v.warning_min && v.value <= v.warning_min) cls = 'warning';
+            }
+            const display = v.value !== null && v.value !== undefined ? `${v.value} ${v.unit || ''}` : '—';
+            return `<div class="metric-row">
+                <span class="metric-label">${key}</span>
+                <span class="metric-value ${cls}">${display}</span>
+            </div>`;
+        }).join('');
+
+        return `<div class="sensor-machine-card">
+            <div class="machine-header">
+                <span class="machine-name">${m.machine_name || m.machine_id}</span>
+                <div class="machine-status-light ${m.status}"></div>
+            </div>
+            ${metrics}
+        </div>`;
+    }).join('');
+}
+
+// Polling (fallback for demo reliability — 5s interval)
+function startSensorPolling() {
+    stopSensorPolling();
+    sensorPollTimer = setInterval(refreshDashboard, 5000);
+}
+function stopSensorPolling() {
+    if (sensorPollTimer) { clearInterval(sensorPollTimer); sensorPollTimer = null; }
+}
+
+// Supabase Realtime subscription on sensor_alerts
+function setupRealtimeAlerts() {
+    try {
+        // Use Supabase Realtime via WebSocket (PostgREST channel)
+        const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_ANON_KEY + '&vsn=1.0.0';
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            console.log('[SENSOR] Realtime connected');
+            // Join channel for sensor_alerts inserts
+            const joinMsg = JSON.stringify({
+                topic: `realtime:public:sensor_alerts`,
+                event: 'phx_join',
+                payload: { config: { broadcast: { self: true }, postgres_changes: [{ event: 'INSERT', schema: 'public', table: 'sensor_alerts' }] } },
+                ref: '1'
+            });
+            ws.send(joinMsg);
+
+            // Heartbeat to keep connection alive
+            setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: 'hb' }));
+                }
+            }, 30000);
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.event === 'postgres_changes' || msg.event === 'INSERT') {
+                    const payload = msg.payload?.record || msg.payload?.data?.record;
+                    if (payload) handleRealtimeAlert(payload);
+                }
+                // Also handle the newer format
+                if (msg.payload?.type === 'INSERT' && msg.payload?.record) {
+                    handleRealtimeAlert(msg.payload.record);
+                }
+            } catch (e) { /* ignore parse errors */ }
+        };
+
+        ws.onerror = (e) => console.warn('[SENSOR] Realtime error:', e);
+        ws.onclose = () => console.log('[SENSOR] Realtime closed');
+
+        realtimeChannel = ws;
+    } catch (e) {
+        console.warn('[SENSOR] Could not setup realtime:', e);
+    }
+}
+
+function teardownRealtimeAlerts() {
+    if (realtimeChannel) {
+        realtimeChannel.close();
+        realtimeChannel = null;
+    }
+}
+
+function handleRealtimeAlert(alert) {
+    console.log('🚨 [SENSOR] Realtime alert:', alert);
+    refreshDashboard();
+
+    if (alert.severity === 'critical') {
+        showAlertBanner(alert);
+
+        // If voice session active, inject alert into conversation
+        if (conversation && conversation.sendUserMessage) {
+            const voiceMsg = `ACHTUNG SENSORALARM: ${alert.message}. Was soll ich tun?`;
+            console.log('[SENSOR] Injecting alert into voice session:', voiceMsg);
+            conversation.sendUserMessage(voiceMsg);
+        }
+    }
+}
+
+function showAlertBanner(alert) {
+    lastBannerAlertId = alert.id || null;
+    sensorAlertText.textContent = `🔴 ${alert.message}`;
+    sensorAlertBanner.classList.add('active');
+
+    // Auto-dismiss after 15 seconds
+    setTimeout(() => {
+        sensorAlertBanner.classList.remove('active');
+    }, 15000);
+}
+
+// Dismiss banner + acknowledge alert
+async function dismissAlertBanner() {
+    sensorAlertBanner.classList.remove('active');
+    if (lastBannerAlertId) {
+        try {
+            await fetch(`${API_URL}/api/v1/sensors/acknowledge/${lastBannerAlertId}`, {
+                method: 'POST',
+                headers: { 'X-Tenant-ID': 'seger', 'Content-Type': 'application/json' }
+            });
+        } catch (e) { console.warn('[SENSOR] Acknowledge error:', e); }
+        lastBannerAlertId = null;
+        refreshDashboard();
+    }
+}
+
+// Fire a demo scenario
+async function fireScenario(scenario, machineId = 'machine_01') {
+    try {
+        const resp = await fetch(`${API_URL}/api/v1/sensors/simulate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Tenant-ID': 'seger' },
+            body: JSON.stringify({ scenario, machine_id: machineId })
+        });
+        const data = await resp.json();
+        console.log(`[SENSOR] Scenario '${scenario}':`, data);
+
+        // Immediately refresh + handle alerts locally (don't wait for realtime)
+        refreshDashboard();
+        if (data.alerts && data.alerts.length > 0) {
+            for (const alert of data.alerts) {
+                handleRealtimeAlert(alert);
+            }
+        }
+    } catch (e) {
+        console.error('[SENSOR] Simulate error:', e);
+    }
+}
+
+// Wire up sensor panel events
+document.addEventListener('DOMContentLoaded', () => {
+    // Auto-open in demo mode
+    if (isDemoMode()) {
+        toggleSensorPanel();
+    }
+
+    // Press D to toggle
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'd' || e.key === 'D') {
+            // Don't trigger when typing in input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            toggleSensorPanel();
+        }
+    });
+
+    // Demo scenario buttons
+    document.querySelectorAll('.demo-btn[data-scenario]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            fireScenario(btn.dataset.scenario);
+        });
+    });
+
+    // Panel close
+    sensorPanelClose.addEventListener('click', toggleSensorPanel);
+
+    // Alert banner dismiss
+    sensorAlertDismiss.addEventListener('click', dismissAlertBanner);
+});
+
 // Expose for testing in console
 window.showErrorCode = showErrorCode;
 window.startVoiceCall = startVoiceCall;
 window.getConversation = () => conversation;
+window.toggleSensorPanel = toggleSensorPanel;
+window.fireScenario = fireScenario;

@@ -163,6 +163,26 @@
             <table class="error-table" id="errorTable"></table>
         </div>
     </div>
+    <!-- Sensor Alert Banner -->
+    <div class="sensor-alert-banner" id="sensorAlertBanner">
+        <span id="sensorAlertText"></span>
+        <button class="dismiss-btn" id="sensorAlertDismiss">OK</button>
+    </div>
+    <!-- Sensor Panel -->
+    <div class="sensor-panel" id="sensorPanel">
+        <div class="sensor-panel-header">
+            <span class="sensor-panel-title">Sensor Monitor</span>
+            <button class="sensor-panel-close" id="sensorPanelClose">&times;</button>
+        </div>
+        <div class="sensor-machines" id="sensorMachines"></div>
+        <div class="sensor-demo-buttons">
+            <button class="demo-btn danger" data-scenario="overheat">Overheat</button>
+            <button class="demo-btn danger" data-scenario="vibration_spike">Vibration</button>
+            <button class="demo-btn danger" data-scenario="pressure_drop">Pressure Drop</button>
+            <button class="demo-btn danger" data-scenario="error_code">Error Code</button>
+            <button class="demo-btn safe"   data-scenario="all_clear">All Clear</button>
+        </div>
+    </div>
     <!-- Media Lightbox -->
     <div class="media-lightbox" id="mediaLightbox">
         <img id="lightboxImage" src="" alt="Full size">
