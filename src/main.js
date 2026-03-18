@@ -396,7 +396,11 @@ function checkForErrorCodes(text) {
     
     for (const code of knownErrorCodes) {
         if (recentlyShownCodes.has(code)) continue;
-        if (textLower.includes(code.toLowerCase())) {
+        const spokenCode = code.toLowerCase()
+          .replace(/e(\d)/g, 'e $1')
+          .replace(/(\d)/g, (d) => ['zero','one','two','three','four','five','six','seven','eight','nine'][+d] + ' ')
+          .trim();
+        if (textLower.includes(code.toLowerCase()) || textLower.includes(spokenCode)) {
             recentlyShownCodes.add(code);
             setTimeout(() => recentlyShownCodes.delete(code), 30000);
             console.log(`🔍 Detected error code: ${code}`);
