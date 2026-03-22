@@ -1,366 +1,325 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>VOXA AI — Demo Controller</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --voxa-teal: #4A9B9B;
-            --voxa-teal-dark: #3D8585;
-            --dark-gray: #3D3D3D;
-            --coral: #D47764;
-            --beige: #E8DDD0;
-            --text-dark: #333333;
-            --text-light: #FFFFFF;
-            --green: #4CAF50;
-            --yellow: #FFC107;
-            --red: #F44336;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Uptime Insurance — Seger Advanced Technologies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --s-teal:#009CA6;--voxa-teal:#4A9B9B;--voxa-coral:#D47764;
+  --bg:#0D1117;--surf:#161C26;--surf2:#1C2433;
+  --bdr:rgba(0,156,166,.15);--bdrm:rgba(0,156,166,.3);
+  --ok:#22C55E;--warn:#F59E0B;--crit:#EF4444;
+  --ok-bg:rgba(34,197,94,.08);--warn-bg:rgba(245,158,11,.08);--crit-bg:rgba(239,68,68,.1);
+  --t1:#EDF2F7;--t2:#8DA0B3;--t3:#4A5E6E;
+  --font:'Space Grotesk',sans-serif}
+html,body{min-height:100vh;background:var(--bg);color:var(--t1);font-family:var(--font);-webkit-font-smoothing:antialiased}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+/* HEADER */
+.hdr{background:var(--surf);border-bottom:1px solid var(--bdrm);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50}
+.hl{display:flex;align-items:center;gap:14px}
+.lg-s{font-size:17px;font-weight:700;letter-spacing:.1em;color:var(--s-teal);text-decoration:none}
+.lg-v{font-size:14px;font-weight:700;color:var(--voxa-teal);letter-spacing:.04em}
+.lg-a{font-size:14px;font-weight:400;color:var(--t2)}
+.sep{width:1px;height:18px;background:var(--bdrm)}
+.hd-sec{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--t2);text-transform:uppercase}
+.hd-pill{font-size:10px;font-weight:700;letter-spacing:.1em;color:#fff;background:var(--s-teal);padding:2px 8px;text-transform:uppercase}
+.live{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--ok);text-transform:uppercase}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-        body {
-            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #FFFFFF;
-            color: var(--text-dark);
-            min-height: 100vh;
-            min-height: 100dvh;
-        }
+/* PAGE */
+.page{max-width:600px;margin:0 auto;padding:20px 16px 64px}
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            background: #FFFFFF;
-            border-bottom: 1px solid #E0E0E0;
-        }
-        .logo { display: flex; align-items: baseline; gap: 0.25rem; }
-        .logo-voxa { font-size: 1.8rem; font-weight: 700; color: var(--voxa-teal); letter-spacing: -0.02em; }
-        .logo-ai { font-size: 1.8rem; font-weight: 700; color: var(--text-dark); letter-spacing: -0.02em; }
-        .header-label {
-            font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.08em; color: var(--coral);
-        }
+/* MACHINE ROW */
+.mrow{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bdrm);padding:12px 16px;margin-bottom:14px}
+.mlbl{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--t3);text-transform:uppercase;flex-shrink:0}
+.msel{flex:1;background:var(--bg);border:1px solid var(--bdrm);color:var(--t1);font-family:var(--font);font-size:14px;font-weight:600;padding:7px 32px 7px 10px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23009CA6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.msel:focus{border-color:var(--s-teal)}
 
-        /* Main */
-        .main { padding: 1.25rem 1.5rem; max-width: 600px; margin: 0 auto; }
+/* SENSOR CARD */
+.sensor{background:var(--surf);border:1px solid var(--bdr);padding:18px 16px 14px;margin-bottom:10px;transition:border-color .25s,background .25s}
+.sensor.is-warn{border-color:var(--warn);background:linear-gradient(135deg,rgba(245,158,11,.06) 0%,var(--surf) 55%)}
+.sensor.is-crit{border-color:var(--crit);background:linear-gradient(135deg,rgba(239,68,68,.08) 0%,var(--surf) 55%);animation:cb 1.4s ease-in-out infinite}
+@keyframes cb{0%,100%{border-color:var(--crit)}50%{border-color:rgba(239,68,68,.35)}}
+.stop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.snb{display:flex;flex-direction:column;gap:2px}
+.sname{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--t3);text-transform:uppercase}
+.sid{font-size:10px;color:var(--t3);letter-spacing:.05em}
+.svb{text-align:right}
+.sval{font-size:38px;font-weight:700;line-height:1;color:var(--t1);font-variant-numeric:tabular-nums;transition:color .25s}
+.sunit{font-size:15px;font-weight:500;color:var(--t2);margin-left:2px}
+.sensor.is-warn .sval{color:var(--warn)}
+.sensor.is-crit .sval{color:var(--crit)}
+.ssts{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;margin-top:4px;color:var(--ok);background:var(--ok-bg);border:1px solid rgba(34,197,94,.2)}
+.sensor.is-warn .ssts{color:var(--warn);background:var(--warn-bg);border-color:rgba(245,158,11,.25)}
+.sensor.is-crit .ssts{color:var(--crit);background:var(--crit-bg);border-color:rgba(239,68,68,.3)}
 
-        /* Machine selector */
-        .machine-select-wrap { margin-bottom: 1.5rem; }
-        .machine-select-label {
-            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.06em; color: #999; margin-bottom: 0.4rem;
-        }
-        .machine-select {
-            width: 100%; padding: 0.75rem 1rem;
-            font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600;
-            border: 2px solid #E0E0E0; border-radius: 0; background: #FAFAFA;
-            color: var(--text-dark); cursor: pointer; appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 1rem center;
-        }
-        .machine-select:focus { outline: none; border-color: var(--voxa-teal); }
+/* SLIDER */
+.strk{position:relative;height:5px;background:var(--surf2);border:1px solid var(--bdr);margin-bottom:3px}
+input[type=range]{position:absolute;inset:0;width:100%;height:5px;margin:0;background:transparent;appearance:none;-webkit-appearance:none;outline:none;cursor:pointer;z-index:2}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:#fff;border:2px solid var(--s-teal);cursor:pointer;margin-top:-8px;transition:border-color .2s,transform .1s;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
+.sensor.is-warn input[type=range]::-webkit-slider-thumb{border-color:var(--warn)}
+.sensor.is-crit input[type=range]::-webkit-slider-thumb{border-color:var(--crit);box-shadow:0 0 8px rgba(239,68,68,.5)}
+.smm{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-top:3px;font-variant-numeric:tabular-nums}
+.thrs{display:flex;gap:14px;margin-top:8px}
+.tp{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--t3)}
+.tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 
-        /* Sensor slider rows */
-        .sensor-row {
-            margin-bottom: 1.5rem; padding: 1rem;
-            background: #FAFAFA; border: 1px solid #E8E8E8; border-radius: 6px;
-        }
-        .sensor-header {
-            display: flex; justify-content: space-between; align-items: baseline;
-            margin-bottom: 0.6rem;
-        }
-        .sensor-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #666; }
-        .sensor-value-display { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-        .sensor-value-display.normal  { color: var(--green); }
-        .sensor-value-display.warning { color: var(--yellow); }
-        .sensor-value-display.critical { color: var(--red); }
+/* AI PANEL */
+.aip{background:var(--surf);border:1px solid var(--bdrm);overflow:hidden;max-height:0;transition:max-height .4s ease;margin-bottom:10px}
+.aip.open{max-height:400px}
+.aiph{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--bdr);background:var(--surf2)}
+.ailbl{font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--s-teal);text-transform:uppercase;flex:1}
+.aispin{width:12px;height:12px;border:1.5px solid var(--bdrm);border-top-color:var(--s-teal);border-radius:50%;animation:spin .8s linear infinite;display:none}
+.aispin.on{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.aibody{padding:12px 16px;font-size:13px;line-height:1.65;color:var(--t2);min-height:40px}
+.aibody strong{color:var(--t1);font-weight:600}
 
-        /* Slider track */
-        .slider-wrap { position: relative; margin-top: 0.25rem; }
+/* BANNER */
+.esb{position:fixed;bottom:0;left:0;right:0;background:var(--crit);color:#fff;padding:13px 20px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200}
+.esb.show{transform:translateY(0)}
+.esb-ico{font-size:16px;flex-shrink:0}
+.esb-txt{flex:1}
+.esb-sub{font-size:10px;font-weight:400;opacity:.85;display:block;text-transform:none;letter-spacing:0;margin-top:1px}
 
-        .sensor-slider {
-            -webkit-appearance: none; appearance: none;
-            width: 100%; height: 8px; border-radius: 4px;
-            outline: none; cursor: pointer;
-        }
-        .sensor-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 28px; height: 28px; border-radius: 50%;
-            background: #fff; border: 3px solid var(--voxa-teal);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            cursor: pointer;
-        }
-        .sensor-slider::-moz-range-thumb {
-            width: 28px; height: 28px; border-radius: 50%;
-            background: #fff; border: 3px solid var(--voxa-teal);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            cursor: pointer;
-        }
-
-        /* Threshold markers */
-        .slider-markers {
-            display: flex; justify-content: space-between;
-            margin-top: 0.3rem; font-size: 0.65rem; color: #aaa;
-        }
-        .marker-warning { color: var(--yellow); font-weight: 600; }
-        .marker-critical { color: var(--red); font-weight: 600; }
-
-        /* Reset button */
-        .reset-btn {
-            width: 100%; padding: 1rem;
-            font-family: 'Space Grotesk', sans-serif; font-size: 1rem;
-            font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-            background: var(--coral); color: var(--text-light);
-            border: none; border-radius: 0; cursor: pointer;
-            margin-top: 0.5rem; transition: opacity 0.2s;
-        }
-        .reset-btn:hover { opacity: 0.9; }
-        .reset-btn:active { opacity: 0.8; }
-
-        /* Status banner */
-        .status-banner {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            padding: 0.75rem 1.5rem; text-align: center;
-            font-weight: 700; font-size: 0.85rem; letter-spacing: 0.03em;
-            z-index: 100; transform: translateY(100%);
-            transition: transform 0.3s ease-out;
-        }
-        .status-banner.visible { transform: translateY(0); }
-        .status-banner.critical { background: var(--red); color: #fff; }
-        .status-banner.clear { background: var(--green); color: #fff; }
-
-        /* Responsive */
-        @media (max-width: 400px) {
-            .main { padding: 1rem; }
-            .sensor-value-display { font-size: 1.3rem; }
-        }
-    </style>
+/* RESET + FOOTER */
+.btn-r{width:100%;background:transparent;border:1px solid var(--bdrm);color:var(--t2);font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:13px;cursor:pointer;margin-top:4px;transition:border-color .2s,color .2s}
+.btn-r:hover{border-color:var(--s-teal);color:var(--s-teal)}
+.btn-r:active{transform:scale(.99)}
+.foot{margin-top:24px;padding-top:16px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.foot-brand{font-size:10px;color:var(--t3);letter-spacing:.06em}
+.foot-brand strong{color:var(--s-teal)}
+.back{font-size:11px;font-weight:600;color:var(--voxa-teal);text-decoration:none;letter-spacing:.06em;text-transform:uppercase}
+.back:hover{color:var(--s-teal)}
+</style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo">
-            <span class="logo-voxa">VOXA</span>
-            <span class="logo-ai">AI</span>
-        </div>
-        <span class="header-label">Demo Controller</span>
-    </header>
 
-    <main class="main">
-        <div class="machine-select-wrap">
-            <div class="machine-select-label">Machine</div>
-            <select class="machine-select" id="machineSelect">
-                <option value="machine_01">Machine 01</option>
-                <option value="conveyor_3">Conveyor 3</option>
-            </select>
-        </div>
+<header class="hdr">
+  <div class="hl">
+    <a class="lg-s" href="/">SEGER</a>
+    <div class="sep"></div>
+    <span class="lg-v">VOXA</span><span class="lg-a"> AI</span>
+    <div class="sep"></div>
+    <span class="hd-sec">Uptime Insurance</span>
+    <span class="hd-pill">Demo</span>
+  </div>
+  <div class="live"><div class="live-dot"></div>Live</div>
+</header>
 
-        <div class="sensor-row" id="row-temperature">
-            <div class="sensor-header">
-                <span class="sensor-label">Temperature</span>
-                <span class="sensor-value-display normal" id="val-temperature">40 °C</span>
-            </div>
-            <div class="slider-wrap">
-                <input type="range" class="sensor-slider" id="slider-temperature"
-                       min="20" max="120" step="1" value="40">
-            </div>
-            <div class="slider-markers">
-                <span>20°C</span>
-                <span class="marker-warning">70°C</span>
-                <span class="marker-critical">85°C</span>
-                <span>120°C</span>
-            </div>
-        </div>
+<div class="page">
 
-        <div class="sensor-row" id="row-humidity">
-            <div class="sensor-header">
-                <span class="sensor-label">Humidity</span>
-                <span class="sensor-value-display normal" id="val-humidity">45 %</span>
-            </div>
-            <div class="slider-wrap">
-                <input type="range" class="sensor-slider" id="slider-humidity"
-                       min="20" max="100" step="1" value="45">
-            </div>
-            <div class="slider-markers">
-                <span>20%</span>
-                <span class="marker-warning">75%</span>
-                <span class="marker-critical">90%</span>
-                <span>100%</span>
-            </div>
-        </div>
+  <div class="mrow">
+    <span class="mlbl">Maschine</span>
+    <select class="msel" id="machSel">
+      <option value="machine_01">Machine 01 — Förderband A</option>
+      <option value="conveyor_3">Conveyor 3 — Palettenförderung</option>
+    </select>
+  </div>
 
-        <div class="sensor-row" id="row-vibration">
-            <div class="sensor-header">
-                <span class="sensor-label">Vibration</span>
-                <span class="sensor-value-display normal" id="val-vibration">1.5 mm/s</span>
-            </div>
-            <div class="slider-wrap">
-                <input type="range" class="sensor-slider" id="slider-vibration"
-                       min="0" max="15" step="0.1" value="1.5">
-            </div>
-            <div class="slider-markers">
-                <span>0</span>
-                <span class="marker-warning">4 mm/s</span>
-                <span class="marker-critical">7.5 mm/s</span>
-                <span>15</span>
-            </div>
-        </div>
+  <!-- TEMPERATURE -->
+  <div class="sensor" id="card-temperature">
+    <div class="stop">
+      <div class="snb"><span class="sname">Temperatur</span><span class="sid" id="sid-temperature">Machine 01 · T-01</span></div>
+      <div class="svb"><span class="sval" id="val-temperature">45</span><span class="sunit">°C</span><br><span class="ssts" id="sts-temperature">Normal</span></div>
+    </div>
+    <div class="strk" id="trk-temperature"><input type="range" id="sld-temperature" min="20" max="120" step="1" value="45"></div>
+    <div class="smm"><span>20°C</span><span>120°C</span></div>
+    <div class="thrs">
+      <div class="tp"><div class="tdot" style="background:var(--warn)"></div>Warnung 70°C</div>
+      <div class="tp"><div class="tdot" style="background:var(--crit)"></div>Kritisch 85°C</div>
+    </div>
+  </div>
 
-        <button class="reset-btn" id="resetBtn">Reset All Sensors</button>
-    </main>
+  <!-- HUMIDITY -->
+  <div class="sensor" id="card-humidity">
+    <div class="stop">
+      <div class="snb"><span class="sname">Luftfeuchtigkeit</span><span class="sid" id="sid-humidity">Machine 01 · H-01</span></div>
+      <div class="svb"><span class="sval" id="val-humidity">55</span><span class="sunit">%</span><br><span class="ssts" id="sts-humidity">Normal</span></div>
+    </div>
+    <div class="strk" id="trk-humidity"><input type="range" id="sld-humidity" min="20" max="100" step="1" value="55"></div>
+    <div class="smm"><span>20%</span><span>100%</span></div>
+    <div class="thrs">
+      <div class="tp"><div class="tdot" style="background:var(--warn)"></div>Warnung 75%</div>
+      <div class="tp"><div class="tdot" style="background:var(--crit)"></div>Kritisch 90%</div>
+    </div>
+  </div>
 
-    <div class="status-banner" id="statusBanner"></div>
+  <!-- VIBRATION -->
+  <div class="sensor" id="card-vibration">
+    <div class="stop">
+      <div class="snb"><span class="sname">Vibration</span><span class="sid" id="sid-vibration">Machine 01 · V-01</span></div>
+      <div class="svb"><span class="sval" id="val-vibration">1.5</span><span class="sunit">mm/s</span><br><span class="ssts" id="sts-vibration">Normal</span></div>
+    </div>
+    <div class="strk" id="trk-vibration"><input type="range" id="sld-vibration" min="0" max="15" step="0.1" value="1.5"></div>
+    <div class="smm"><span>0 mm/s</span><span>15 mm/s</span></div>
+    <div class="thrs">
+      <div class="tp"><div class="tdot" style="background:var(--warn)"></div>Warnung 4 mm/s</div>
+      <div class="tp"><div class="tdot" style="background:var(--crit)"></div>Kritisch 7.5 mm/s</div>
+    </div>
+  </div>
 
-    <script>
-        const API_URL = 'https://seger-voice-agent.onrender.com';
+  <!-- AI Diagnosis — slides open on warn/crit -->
+  <div class="aip" id="aiPanel">
+    <div class="aiph">
+      <span class="ailbl">VOXA AI — Diagnose</span>
+      <div class="aispin" id="aiSpin"></div>
+    </div>
+    <div class="aibody" id="aiBody">—</div>
+  </div>
 
-        const SENSORS = {
-            temperature: { unit: '°C', warning: 70, critical: 85, safe: 40 },
-            humidity:    { unit: '%',  warning: 75, critical: 90, safe: 45 },
-            vibration:   { unit: 'mm/s', warning: 4, critical: 7.5, safe: 1.5 },
-        };
+  <button class="btn-r" onclick="resetAll()">&#8635; &nbsp; Alle Sensoren zurücksetzen</button>
 
-        const machineSelect = document.getElementById('machineSelect');
-        const statusBanner = document.getElementById('statusBanner');
-        const resetBtn = document.getElementById('resetBtn');
+  <div class="foot">
+    <span class="foot-brand"><strong>SEGER</strong> Advanced Technologies &times; Botica.tech</span>
+    <a class="back" href="/">&#8592; VOXA</a>
+  </div>
 
-        // Track state per sensor
-        const sensorState = {};
-        const debounceTimers = {};
+</div>
 
-        // Initialize
-        Object.keys(SENSORS).forEach(key => {
-            sensorState[key] = 'normal'; // normal, warning, critical
-            const slider = document.getElementById(`slider-${key}`);
-            const display = document.getElementById(`val-${key}`);
+<div class="esb" id="escBan">
+  <span class="esb-ico">&#9888;</span>
+  <span class="esb-txt">Eskalation — SMS + Anruf ausgelöst<span class="esb-sub" id="escSub"></span></span>
+</div>
 
-            // Set gradient background
-            updateSliderTrack(slider, key);
+<script>
+const CFG={
+  temperature:{warn:70,crit:85,min:20,max:120,unit:'°C',def:45,dec:0,code:'T'},
+  humidity:   {warn:75,crit:90,min:20,max:100,unit:'%', def:55,dec:0,code:'H'},
+  vibration:  {warn:4, crit:7.5,min:0,max:15, unit:'mm/s',def:1.5,dec:1,code:'V'}
+};
+const TYPES=Object.keys(CFG);
+const BACKEND='https://seger-voice-agent.onrender.com';
+const prev={temperature:'ok',humidity:'ok',vibration:'ok'};
+const deb={};
+let banTmr=null,aiTmr=null;
 
-            slider.addEventListener('input', () => {
-                const val = parseFloat(slider.value);
-                const cfg = SENSORS[key];
-                display.textContent = `${key === 'vibration' ? val.toFixed(1) : Math.round(val)} ${cfg.unit}`;
+function mach(){return document.getElementById('machSel').value}
 
-                // Determine zone
-                let zone = 'normal';
-                if (val >= cfg.critical) zone = 'critical';
-                else if (val >= cfg.warning) zone = 'warning';
+function stateOf(type,v){const c=CFG[type];return v>=c.crit?'crit':v>=c.warn?'warn':'ok'}
 
-                display.className = `sensor-value-display ${zone}`;
+function updateTrack(type,v){
+  const c=CFG[type];
+  const p=x=>((x-c.min)/(c.max-c.min))*100;
+  const pw=p(c.warn),pc=p(c.crit),pv=p(v);
+  let g;
+  if(v<c.warn)      g=`linear-gradient(to right,#22C55E ${pv}%,#1C2433 ${pv}%)`;
+  else if(v<c.crit) g=`linear-gradient(to right,#22C55E ${pw}%,#F59E0B ${pw}%,#F59E0B ${pv}%,#1C2433 ${pv}%)`;
+  else              g=`linear-gradient(to right,#22C55E ${pw}%,#F59E0B ${pw}%,#F59E0B ${pc}%,#EF4444 ${pc}%,#EF4444 ${pv}%,#1C2433 ${pv}%)`;
+  document.getElementById('trk-'+type).style.background=g;
+}
 
-                const prevZone = sensorState[key];
-                sensorState[key] = zone;
+function updateCard(type,v){
+  const c=CFG[type],st=stateOf(type,v);
+  document.getElementById('card-'+type).className='sensor'+(st==='ok'?'':' is-'+st);
+  document.getElementById('val-'+type).textContent=v.toFixed(c.dec);
+  document.getElementById('sts-'+type).textContent=st==='ok'?'Normal':st==='warn'?'Warnung':'KRITISCH';
+  updateTrack(type,v);
+}
 
-                // Debounced POST when entering critical OR returning to normal
-                if (zone === 'critical' && prevZone !== 'critical') {
-                    debouncedIngest(key, val, cfg.unit);
-                } else if (zone === 'normal' && prevZone !== 'normal') {
-                    debouncedIngest(key, val, cfg.unit);
-                }
-            });
-        });
+async function askClaude(type,v,st){
+  const c=CFG[type];
+  document.getElementById('aiPanel').classList.add('open');
+  document.getElementById('aiSpin').classList.add('on');
+  document.getElementById('aiBody').innerHTML='<span style="color:var(--t3)">Analysiere Sensordaten…</span>';
+  const prompt=`Du bist VOXA, der KI-Assistent von Seger Advanced Technologies für industrielle Maschinendiagnose.
 
-        function updateSliderTrack(slider, key) {
-            const cfg = SENSORS[key];
-            const min = parseFloat(slider.min);
-            const max = parseFloat(slider.max);
-            const range = max - min;
-            const warnPct = ((cfg.warning - min) / range * 100).toFixed(1);
-            const critPct = ((cfg.critical - min) / range * 100).toFixed(1);
+Sensor-Alarm:
+- Maschine: ${mach().replace(/_/g,' ')}
+- Sensor: ${type} = ${v.toFixed(c.dec)} ${c.unit}
+- Status: ${st==='warn'?'WARNUNG':'KRITISCH'}
+- Schwellenwerte: Warnung bei ${c.warn}${c.unit}, Kritisch bei ${c.crit}${c.unit}
 
-            slider.style.background = `linear-gradient(to right,
-                #4CAF50 0%, #4CAF50 ${warnPct}%,
-                #FFC107 ${warnPct}%, #FFC107 ${critPct}%,
-                #F44336 ${critPct}%, #F44336 100%)`;
-        }
+Antworte auf Deutsch in genau 3 präzisen Sätzen:
+1. Was bedeutet dieser Sensorwert für die Maschine?
+2. Was ist die wahrscheinlichste Ursache?
+3. Welche Sofortmaßnahme empfiehlst du dem Techniker?
 
-        function debouncedIngest(sensorType, value, unit) {
-            clearTimeout(debounceTimers[sensorType]);
-            debounceTimers[sensorType] = setTimeout(() => {
-                postReading(sensorType, value, unit);
-            }, 800);
-        }
+Nur der Diagnosetext, ohne Einleitung oder Formatierung.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await r.json();
+    const txt=d.content?.find(b=>b.type==='text')?.text||'Keine Diagnose verfügbar.';
+    document.getElementById('aiBody').innerHTML=txt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  }catch(e){
+    document.getElementById('aiBody').innerHTML='<span style="color:var(--t3)">Diagnose nicht verfügbar.</span>';
+  }
+  document.getElementById('aiSpin').classList.remove('on');
+}
 
-        async function postReading(sensorType, value, unit) {
-            const machineId = machineSelect.value;
-            const zone = sensorState[sensorType];
+async function postSensor(type,v){
+  const c=CFG[type];
+  try{
+    await fetch(BACKEND+'/api/v1/sensors/ingest',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Tenant-ID':'seger'},
+      body:JSON.stringify({machine_id:mach(),sensor_type:type,value:parseFloat(v.toFixed(c.dec)),unit:c.unit,source:'demo_controller'})
+    });
+  }catch(e){}
+}
 
-            try {
-                const resp = await fetch(`${API_URL}/api/v1/sensors/ingest`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Tenant-ID': 'seger',
-                    },
-                    body: JSON.stringify({
-                        machine_id: machineId,
-                        sensor_type: sensorType,
-                        value: value,
-                        unit: unit,
-                        source: 'demo_controller',
-                    }),
-                });
+function showBanner(type,v){
+  const c=CFG[type];
+  document.getElementById('escSub').textContent=`${type.charAt(0).toUpperCase()+type.slice(1)} ${v.toFixed(c.dec)}${c.unit} · ${mach().replace(/_/g,' ')}`;
+  const b=document.getElementById('escBan');
+  b.classList.add('show');
+  clearTimeout(banTmr);
+  banTmr=setTimeout(()=>b.classList.remove('show'),5500);
+}
 
-                const data = await resp.json();
-                console.log(`[DEMO] ${sensorType} = ${value}${unit}:`, data);
+function handleSlider(type){
+  const v=parseFloat(document.getElementById('sld-'+type).value);
+  updateCard(type,v);
+  clearTimeout(deb[type]);
+  deb[type]=setTimeout(async()=>{
+    await postSensor(type,v);
+    const st=stateOf(type,v),pv=prev[type];
+    if(st!=='ok'&&pv!==st){
+      if(st==='crit')showBanner(type,v);
+      clearTimeout(aiTmr);
+      aiTmr=setTimeout(()=>askClaude(type,v,st),200);
+    }
+    if(st==='ok'&&pv!=='ok')document.getElementById('aiPanel').classList.remove('open');
+    prev[type]=st;
+  },700);
+}
 
-                if (zone === 'critical') {
-                    showBanner('critical', `ESCALATION TRIGGERED — SMS + Call fired`);
-                } else if (zone === 'normal') {
-                    showBanner('clear', `${sensorType} back to normal`);
-                }
+function resetAll(){
+  TYPES.forEach(type=>{
+    const c=CFG[type];
+    document.getElementById('sld-'+type).value=c.def;
+    updateCard(type,c.def);
+    prev[type]='ok';
+    clearTimeout(deb[type]);
+    postSensor(type,c.def);
+  });
+  document.getElementById('escBan').classList.remove('show');
+  document.getElementById('aiPanel').classList.remove('open');
+}
 
-            } catch (e) {
-                console.error('[DEMO] POST error:', e);
-                showBanner('critical', 'Connection error — check Render status');
-            }
-        }
+document.getElementById('machSel').addEventListener('change',()=>{
+  const sfx=mach()==='machine_01'?'01':'03';
+  const lbl=mach()==='machine_01'?'Machine 01':'Conveyor 3';
+  TYPES.forEach(type=>{
+    document.getElementById('sid-'+type).textContent=lbl+' · '+CFG[type].code+'-'+sfx;
+  });
+});
 
-        function showBanner(type, text) {
-            statusBanner.className = `status-banner ${type}`;
-            statusBanner.textContent = type === 'critical' ? `🔴 ${text}` : `🟢 ${text}`;
-            statusBanner.classList.add('visible');
-            setTimeout(() => statusBanner.classList.remove('visible'), 5000);
-        }
-
-        // Reset all sliders to safe values
-        resetBtn.addEventListener('click', () => {
-            Object.keys(SENSORS).forEach(key => {
-                const cfg = SENSORS[key];
-                const slider = document.getElementById(`slider-${key}`);
-                const display = document.getElementById(`val-${key}`);
-                slider.value = cfg.safe;
-                display.textContent = `${key === 'vibration' ? cfg.safe.toFixed(1) : Math.round(cfg.safe)} ${cfg.unit}`;
-                display.className = 'sensor-value-display normal';
-                sensorState[key] = 'normal';
-            });
-
-            // Post all-clear for selected machine
-            const machineId = machineSelect.value;
-            Object.keys(SENSORS).forEach(key => {
-                const cfg = SENSORS[key];
-                fetch(`${API_URL}/api/v1/sensors/ingest`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Tenant-ID': 'seger' },
-                    body: JSON.stringify({
-                        machine_id: machineId,
-                        sensor_type: key,
-                        value: cfg.safe,
-                        unit: cfg.unit,
-                        source: 'demo_controller',
-                    }),
-                }).catch(e => console.warn('[DEMO] Reset POST error:', e));
-            });
-
-            showBanner('clear', 'All sensors reset to safe values');
-        });
-    </script>
+TYPES.forEach(type=>{
+  document.getElementById('sld-'+type).addEventListener('input',()=>handleSlider(type));
+  updateCard(type,CFG[type].def);
+});
+</script>
 </body>
 </html>

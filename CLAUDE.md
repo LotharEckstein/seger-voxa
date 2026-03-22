@@ -108,6 +108,18 @@ git push
 
 ---
 
+## Demo Controller (public/demo.html)
+Standalone sensor alarm page, no Vite build needed.
+- URL: https://seger-voxa.vercel.app/demo.html
+- Linked from "Uptime Insurance" nav item in index.html
+- Design: Seger CI — dark bg (#0D1117), #009CA6 teal, Space Grotesk
+- 3 sensors: temperature (warn 70°C / crit 85°C), humidity (warn 75% / crit 90%), vibration (warn 4mm/s / crit 7.5mm/s)
+- Claude-in-Claude: on warn/crit entry, calls Anthropic API (claude-sonnet-4-20250514) for live German diagnosis
+- Posts to backend: POST /api/v1/sensors/ingest with X-Tenant-ID: seger
+- Twilio escalation banner fires on critical threshold crossing
+
+---
+
 ## Open Tasks (Frontend)
 
 ### Pre-Trade Fair Stuttgart (March 22–24)
